@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Delete your account — Inner Messages</title>
+<meta name="description" content="Delete your Inner Messages account and all the data stored with it.">
+<link rel="icon" href="images/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-header" id="siteHeader">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <img src="images/icon.png" alt="">
+      <span>Inner Messages</span>
+    </a>
+    <nav class="site-nav">
+      <a href="support.html">Support</a>
+      <a href="privacy.html">Privacy</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page-head">
+  <div class="wrap" style="max-width:720px">
+    <a class="back" href="index.html">← Back to Inner Messages</a>
+    <h1>Delete your account</h1>
+    <p class="lede" style="margin-bottom:40px">This page deletes your <strong>Inner Messages</strong>
+      account (app package <code>com.innerstudios.innermessages</code>, by Inner Studios) together
+      with the data stored for it. You do it yourself, right here — nobody has to approve it.</p>
+
+    <div class="panel">
+      <h2>What gets deleted</h2>
+      <p>Everything the app keeps about you is removed immediately:</p>
+      <ul>
+        <li>Your login — your email address and password</li>
+        <li>Your profile: name, your Inner ID, and your profile picture</li>
+        <li>Every message you wrote and every message you received</li>
+        <li>Your contacts, your pending requests, and your Family / In love / Friends circles</li>
+        <li>Every photo you uploaded to the app, including achievement pictures</li>
+        <li>The notification token that lets the app reach your phone</li>
+      </ul>
+
+      <h3>What stays, and for how long</h3>
+      <ul>
+        <li>Messages you sent to another person are deleted from your account, but a copy stays
+          in <em>their</em> inbox — the same way a letter you posted stays with the person who
+          received it. Only they can delete it.</li>
+        <li>Backups of the database are kept for up to <strong>30 days</strong> and then
+          overwritten. Nobody reads them; they exist only to recover from a failure.</li>
+        <li>Anonymous, aggregated usage counts (how many people opened the app on a given day)
+          are kept, but they are not linked to you and cannot be traced back to you.</li>
+      </ul>
+      <p style="margin-bottom:0"><strong>Deletion is permanent.</strong> There is no undo and no
+        way to bring an account back.</p>
+    </div>
+
+    <div class="panel">
+      <h2>Delete it now</h2>
+      <p>Sign in to prove the account is yours. The moment you confirm, it is gone.</p>
+
+      <div class="note note-warn">
+        This cannot be undone. Your messages and photos cannot be recovered afterwards.
+      </div>
+
+      <form id="deleteForm" novalidate>
+        <div class="field">
+          <label for="email">Email address</label>
+          <input type="email" id="email" autocomplete="email" required
+                 placeholder="you@example.com" inputmode="email">
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" autocomplete="current-password" required
+                 placeholder="Your password">
+        </div>
+        <label style="display:flex;gap:10px;align-items:flex-start;font-size:.95rem;color:var(--ink-soft);margin-bottom:22px">
+          <input type="checkbox" id="confirm" style="width:auto;margin-top:4px">
+          <span>I understand that my account and all of my data will be permanently deleted.</span>
+        </label>
+        <button class="btn btn-danger btn-full" type="submit" id="submitBtn">
+          Permanently delete my account
+        </button>
+      </form>
+
+      <div class="status" id="status" role="status" aria-live="polite"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Rather have me do it?</h2>
+      <p>If you cannot sign in — you forgot the password, or you no longer have the email
+        address — ask me and I will delete the account by hand.</p>
+      <p>Write to <a id="supportLink" href="#">the support address</a> from the email address on
+        the account, with "Delete my account" in the subject. Requests are handled within
+        <strong>30 days</strong>, usually the same week. I will reply when it is done.</p>
+      <p style="margin-bottom:0">You can also just
+        <a href="reset-password.html">reset your password</a> and come back to the form above.</p>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <a class="brand" href="index.html">
+        <img src="images/icon.png" alt="">
+        <span>Inner Messages</span>
+      </a>
+      <nav class="footer-links">
+        <a href="index.html">Home</a>
+        <a href="support.html">Support</a>
+        <a href="privacy.html">Privacy policy</a>
+        <a href="reset-password.html">Reset password</a>
+      </nav>
+    </div>
+    <p class="fine">© <span id="year">2026</span> Inner Studios.</p>
+  </div>
+</footer>
+
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js';
+  import { getAuth, signInWithEmailAndPassword, deleteUser }
+    from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js';
+  import { getDatabase, ref as dbRef, get, remove }
+    from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js';
+  import { getStorage, ref as stRef, listAll, deleteObject }
+    from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js';
+  import { firebaseConfig, SUPPORT_EMAIL } from './firebase-config.js';
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+  const storage = getStorage(app);
+
+  const form = document.getElementById('deleteForm');
+  const button = document.getElementById('submitBtn');
+  const status = document.getElementById('status');
+
+  const mailto = 'mailto:' + SUPPORT_EMAIL +
+    '?subject=' + encodeURIComponent('Delete my account') +
+    '&body=' + encodeURIComponent(
+      'Please delete my Inner Messages account.\n\nEmail on the account: \n');
+  const supportLink = document.getElementById('supportLink');
+  supportLink.href = mailto;
+  supportLink.textContent = SUPPORT_EMAIL;
+
+  const show = (kind, html) => {
+    status.className = 'status is-visible is-' + kind;
+    status.innerHTML = html;
+  };
+
+  /** Deletes every file under a Storage folder, including nested folders. */
+  async function purgeFolder(folder) {
+    const listing = await listAll(folder);
+    for (const item of listing.items) {
+      await deleteObject(item).catch(() => {});
+    }
+    for (const prefix of listing.prefixes) {
+      await purgeFolder(prefix).catch(() => {});
+    }
+  }
+
+  /** Keys of a node, or an empty array when it is missing or unreadable. */
+  async function childKeys(path) {
+    try {
+      const snapshot = await get(dbRef(db, path));
+      return snapshot.exists() ? Object.keys(snapshot.val() || {}) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (!document.getElementById('confirm').checked) {
+      show('error', 'Please tick the box to confirm you understand this is permanent.');
+      return;
+    }
+    if (!email || !password) {
+      show('error', 'Please fill in both your email address and your password.');
+      return;
+    }
+
+    button.disabled = true;
+    show('busy', 'Signing you in…');
+
+    let user;
+    try {
+      const credential = await signInWithEmailAndPassword(auth, email, password);
+      user = credential.user;
+    } catch (error) {
+      const message = {
+        'auth/invalid-email': 'That does not look like a valid email address.',
+        'auth/invalid-credential': 'Wrong email address or password.',
+        'auth/wrong-password': 'Wrong email address or password.',
+        'auth/user-not-found': 'There is no account with that email address — it may already be deleted.',
+        'auth/user-disabled': 'This account is disabled. Please write to support instead.',
+        'auth/too-many-requests': 'Too many attempts from this device. Please wait a few minutes.',
+      }[error.code] || 'Could not sign you in. Please check your details and try again.';
+      show('error', message);
+      button.disabled = false;
+      return;
+    }
+
+    const uid = user.uid;
+    const failed = [];
+
+    show('busy', 'Deleting your photos…');
+    for (const path of ['User Images/' + uid, 'Achievement Images/' + uid]) {
+      await purgeFolder(stRef(storage, path)).catch(() => failed.push('photos'));
+    }
+    await deleteObject(stRef(storage, 'Profile Images/' + uid + '.jpg')).catch(() => {});
+
+    show('busy', 'Deleting your messages and contacts…');
+
+    // Take the other side out of the relationship too, so nobody is left with
+    // a contact or a pending request pointing at an account that is gone.
+    const contacts = await childKeys('Contacts/' + uid);
+    const requests = await childKeys('Chat requests/' + uid);
+    for (const other of contacts) {
+      await remove(dbRef(db, 'Contacts/' + other + '/' + uid)).catch(() => {});
+    }
+    for (const other of requests) {
+      await remove(dbRef(db, 'Chat requests/' + other + '/' + uid)).catch(() => {});
+    }
+
+    // The share-code index lives outside the user node, so clear it first.
+    try {
+      const idSnapshot = await get(dbRef(db, 'Users/' + uid + '/ID'));
+      const shareId = idSnapshot.val();
+      if (typeof shareId === 'string' && shareId) {
+        await remove(dbRef(db, 'ID/' + shareId)).catch(() => {});
+      }
+    } catch { /* nothing to clean up */ }
+
+    // Users/{uid} goes last: the security rules read from it.
+    const ownPaths = [
+      'Groups/' + uid,
+      'Contacts/' + uid,
+      'Chat requests/' + uid,
+      'SurpriseState/' + uid,
+      'Users/' + uid,
+    ];
+    for (const path of ownPaths) {
+      await remove(dbRef(db, path)).catch(() => failed.push(path));
+    }
+
+    show('busy', 'Deleting your login…');
+    try {
+      await deleteUser(user);
+    } catch (error) {
+      show('error',
+        '<strong>Your data was removed, but the login could not be deleted.</strong><br>' +
+        'Please write to <a href="' + mailto + '">' + SUPPORT_EMAIL + '</a> and I will finish it ' +
+        'by hand. (' + (error.code || 'unknown error') + ')');
+      button.disabled = false;
+      return;
+    }
+
+    form.style.display = 'none';
+
+    if (failed.length) {
+      show('ok',
+        '<strong>Your account has been deleted.</strong><br>' +
+        'A few leftovers could not be removed from here. Please write to ' +
+        '<a href="' + mailto + '">' + SUPPORT_EMAIL + '</a> so I can clear them by hand.');
+    } else {
+      show('ok',
+        '<strong>Your account has been deleted.</strong><br>' +
+        'Your login, your messages, your contacts and your photos are gone. ' +
+        'You can close this page — and you can sign up again any time if you change your mind.');
+    }
+  });
+
+  document.getElementById('year').textContent = new Date().getFullYear();
+  const header = document.getElementById('siteHeader');
+  const onScroll = () => header.classList.toggle('is-stuck', window.scrollY > 8);
+  onScroll();
+  addEventListener('scroll', onScroll, { passive: true });
+</script>
+</body>
+</html>

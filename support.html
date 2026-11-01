@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Support — Inner Messages</title>
+<meta name="description" content="Help with Inner Messages: connecting with your partner, notifications, passwords and accounts.">
+<link rel="icon" href="images/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-header" id="siteHeader">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <img src="images/icon.png" alt="">
+      <span>Inner Messages</span>
+    </a>
+    <nav class="site-nav">
+      <a href="privacy.html">Privacy</a>
+      <a href="delete-account.html">Delete account</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page-head">
+  <div class="wrap" style="max-width:720px">
+    <a class="back" href="index.html">← Back to Inner Messages</a>
+    <h1>Support</h1>
+    <p class="lede">One person builds this app, and that person answers the mail. Write to
+      <a id="supportLink" href="#">the address below</a> and you'll hear back.</p>
+
+    <div class="panel" style="margin-top:40px">
+      <h2>Quick answers</h2>
+
+      <h3>Nothing happens when I open the app</h3>
+      <p>Inner Messages only works between two people. Until someone accepts your request there
+        is nothing to receive. Share your Inner ID with your partner or a family member and ask
+        them to add you.</p>
+
+      <h3>My partner isn't getting my messages</h3>
+      <p>Check that you are connected to each other in <em>Requests</em>, and that they have
+        notifications enabled for Inner Messages in their phone settings. Messages arrive as a
+        surprise, so they do not show up the second you write them — that is the point.</p>
+
+      <h3>I forgot my password</h3>
+      <p style="margin-bottom:0">Use the <a href="reset-password.html">password reset page</a>.
+        The link lands in the inbox you signed up with.</p>
+    </div>
+
+    <div class="panel">
+      <h2>Write to me</h2>
+      <p>Bugs, confusing bits, feature ideas, or anything about your account — all welcome. If
+        you are reporting something broken, it helps to say which phone you have and what you
+        were doing when it happened.</p>
+      <p style="margin-bottom:0"><a class="btn btn-primary" id="mailBtn" href="#">Email support</a></p>
+    </div>
+
+    <div class="panel">
+      <h2>Your account</h2>
+      <ul style="margin-bottom:0">
+        <li><a href="reset-password.html">Reset your password</a></li>
+        <li><a href="delete-account.html">Delete your account and all your data</a></li>
+        <li><a href="privacy.html">Read the privacy policy</a></li>
+      </ul>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <a class="brand" href="index.html">
+        <img src="images/icon.png" alt="">
+        <span>Inner Messages</span>
+      </a>
+      <nav class="footer-links">
+        <a href="index.html">Home</a>
+        <a href="privacy.html">Privacy policy</a>
+        <a href="reset-password.html">Reset password</a>
+        <a href="delete-account.html">Delete account</a>
+      </nav>
+    </div>
+    <p class="fine">© <span id="year">2026</span> Inner Studios.</p>
+  </div>
+</footer>
+
+<script type="module">
+  import { SUPPORT_EMAIL } from './firebase-config.js';
+  const link = document.getElementById('supportLink');
+  link.href = 'mailto:' + SUPPORT_EMAIL;
+  link.textContent = SUPPORT_EMAIL;
+  document.getElementById('mailBtn').href =
+    'mailto:' + SUPPORT_EMAIL + '?subject=' + encodeURIComponent('Inner Messages support');
+
+  document.getElementById('year').textContent = new Date().getFullYear();
+  const header = document.getElementById('siteHeader');
+  const onScroll = () => header.classList.toggle('is-stuck', window.scrollY > 8);
+  onScroll();
+  addEventListener('scroll', onScroll, { passive: true });
+</script>
+</body>
+</html>
